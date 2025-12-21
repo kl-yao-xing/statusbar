@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-time = "0"
+time = { version = "0", features = ["formatting", "local-offset"] }
 
