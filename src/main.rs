@@ -32,7 +32,7 @@ impl StatusBar {
             }
         }
         let utctime = OffsetDateTime::now_utc();
-        self.time = utctime.format(&self.time_format).unwrap_or_else(|_| "退化到UTC时间且格式化错误！".to_string());
+        self.time = utctime.format(&self.time_format).unwrap_or_else(|_| "time format error and fall back to UTC!".to_string());
     }
 }
 
