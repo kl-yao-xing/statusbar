@@ -1,45 +1,25 @@
-use std::fmt::format;
-
-use time::{error, format_description::{self, OwnedFormatItem}};
-
-use crate::eventbus::{Event, EventBus, EventConsumer};
+use time::{OffsetDateTime, format_description::{self, OwnedFormatItem}};
 
 pub struct TimeFormatter {
     format : Option<OwnedFormatItem>,
-    event_bus: EventBus,
-    consumer: EventConsumer,
 }
 
 impl TimeFormatter {
-    pub fn new(event_bus: EventBus, consumer: EventConsumer) -> Self {
+    pub fn new() -> Self {
         let format = format_description::parse_owned::<2>("[year]-[month]-[day]-[weekday] [hour]:[minute]")
             .map(|desc| desc.to_owned())
             .ok();
-        Self { event_bus, consumer, format}
+        Self {format}
     }
-
-    pub async fn start(&mut self) {
-        if self.format.is_none() {
-            let _ = self.event_bus.send_event(Event::FormattedTime("TimeFormatErr:0".to_string()));
-            return ;
-        }
-        while let Some(event) = self.consumer.recv().await {
-            match event {
-                Event::TimeTick(time) => {
-                    if let Some(ref format_desc) = self.format {
-                        match time.format(format_desc) {
-                            Ok(formatted_time) => {
-                                let _ = self.event_bus.send_event(Event::FormattedTime(formatted_time));
-                            },
-                            Err(e) => {
-                                let error_msg = format!("TimeFormatErr:{}",e);
-                                let _ = self.event_bus.send_event(Event::FormattedTime(error_msg));
-                            },
-                        }
-                    }
-                },
-                _ => continue,
+    
+    pub fn format_time(&self, time: &OffsetDateTime) -> String {
+        if let Some(ref format_desc) = self.format {
+            match time.format(format_desc) {
+                Ok(formatted_time) => formatted_time,
+                Err(e) => format!("TimeFomatterErr:{}", e),
             }
+        } else {
+            "TimeFormatterErr:0".to_string()
         }
     }
 }
